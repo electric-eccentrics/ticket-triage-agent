@@ -1,0 +1,79 @@
+[
+  {
+    "summary": "Dana R. in Finance and her entire team cannot access the Finance shared drive (F:), receiving a 'network path not found' error during month-end close.",
+    "category": "Network",
+    "priority": "P1",
+    "priority_reason": "High urgency and high impact: an entire Finance team is fully blocked from a shared resource with no workaround on a business-critical month-end close deadline due today.",
+    "assignment_group": "Network Operations",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Can you confirm roughly how many people on the team are affected and whether anyone can still reach F:?",
+      "Are you also unable to reach other network drives or shared resources, or just the Finance (F:) drive?",
+      "Does the issue occur both on your office network and over VPN, if applicable?",
+      "What is the exact full error message, and does trying to reopen F: produce it immediately?"
+    ],
+    "suggested_reply": "Hi Dana, thanks for flagging this and I understand the urgency with month-end close due today. A 'network path not found' error affecting your whole team usually points to a file-server or network issue on our side rather than anything you did. I'm escalating this to Network Operations as a top priority now. To speed things up, could you confirm how many teammates are affected and whether other network drives also fail? We'll keep you updated and move as fast as possible.",
+    "tags": [
+      "shared-drive",
+      "network-path",
+      "finance",
+      "month-end",
+      "outage"
+    ],
+    "sla_response": "15 minutes (critical / outage)",
+    "ticket_id": "T001",
+    "subject": "Cannot access shared drive"
+  },
+  {
+    "summary": "Requester received a suspected phishing email impersonating IT, requesting credential verification via a link due to a supposedly full mailbox.",
+    "category": "Security",
+    "priority": "P2",
+    "priority_reason": "Credential-harvesting phishing is a security threat (urgency high). Impact currently limited since the user did not click, but others may have received it, warranting high priority per the security-at-least-P2 rule.",
+    "assignment_group": "Security Operations",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Can you forward the suspicious email as an attachment (or share the sender's full address and the link URL) to Security Operations?",
+      "When did you receive it, and did you enter your credentials or click the link at any point?",
+      "Have you noticed other colleagues receiving the same message?"
+    ],
+    "suggested_reply": "Hi Marco, thanks for flagging this and for not clicking the link \u2014 that was exactly the right call. This looks like a phishing attempt impersonating IT; we would never ask you to verify your password via a link. Please forward the message to Security Operations as an attachment and then delete it. If you did happen to click or enter any details, let us know immediately so we can secure your account. We'll investigate whether others were targeted. Thanks for your vigilance!",
+    "tags": [
+      "phishing",
+      "credential-harvesting",
+      "email",
+      "security",
+      "awareness"
+    ],
+    "sla_response": "1 hour (high)",
+    "ticket_id": "T002",
+    "subject": "Weird email asking for my password"
+  },
+  {
+    "summary": "Requester's laptop has gradually slowed over the past two weeks, with multi-minute boot times and laggy applications, though it remains usable.",
+    "category": "Hardware",
+    "priority": "P4",
+    "priority_reason": "Low urgency and low impact: single user, device still functional with a workaround (it works, just slowly), and requester explicitly states no rush.",
+    "assignment_group": "Desktop Support",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "What is the make/model and approximate age of the laptop (and its asset tag if known)?",
+      "Does the slowness affect all applications or specific ones in particular?",
+      "Roughly how full is the hard drive, and have any new programs or updates been installed in the last few weeks?",
+      "Is the laptop connected to a docking station or running any unusual startup programs?"
+    ],
+    "suggested_reply": "Hi Priya, thanks for flagging this \u2014 a gradual slowdown over a couple of weeks is usually something we can tune up. Since it's not urgent, we've logged this with Desktop Support at standard priority. To speed things along, could you share your laptop's make/model (or asset tag), whether all apps are slow or just some, and roughly how full the drive is? We'll run some diagnostics and get it back to running smoothly. Thanks for your patience!",
+    "tags": [
+      "performance",
+      "laptop",
+      "slow-boot",
+      "desktop-support",
+      "hardware"
+    ],
+    "sla_response": "1 business day (low)",
+    "ticket_id": "T003",
+    "subject": "Laptop very slow"
+  }
+]

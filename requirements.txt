@@ -1,0 +1,6 @@
+# The default (CLI) backend needs NO Python dependencies -- it drives the
+# authenticated `claude` CLI you already have installed.
+#
+# Install the line below ONLY if you want the cheaper/faster API backend
+# (requires an ANTHROPIC_API_KEY environment variable):
+anthropic>=0.40

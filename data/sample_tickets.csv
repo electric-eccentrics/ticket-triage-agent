@@ -1,0 +1,11 @@
+id,requester,subject,body
+T001,Dana R. (Finance),Cannot access shared drive,"Since this morning I can't open the Finance shared drive (F:). It says 'network path not found'. My whole team is affected and we have month-end close due today. Nothing changed on my end that I know of."
+T002,Marco P.,Weird email asking for my password,"I got an email that looks like it's from IT saying my mailbox is full and I need to 'verify my credentials' at a link. It looks a little off. I didn't click it. Is this real?"
+T003,Priya S.,Laptop very slow,"My laptop has been getting slower over the last couple weeks. Takes a few minutes to boot and apps lag. Still works, just annoying. No rush."
+T004,Jon K. (Sales),CRM throwing error on save,"Every time I try to save an opportunity in the CRM I get 'Error 500 - internal server error'. Started about an hour ago. A couple other sales folks mentioned the same thing. I can't log my deals."
+T005,,Request new monitor,"Hi, could I get a second monitor for my desk? Would help with spreadsheets. Whenever is fine.","",
+T006,Alicia M.,Forgot password locked out,"I tried logging in too many times and now my account is locked. I have a client call in 20 minutes and can't get into my email or Teams. Please help ASAP."
+T007,Server Monitoring,Database connections maxed out,"Automated alert: production SQL Server 'PRD-SQL-01' is at max connection pool and rejecting new connections. Multiple customer-facing apps returning timeouts. Alert fired 4 minutes ago."
+T008,Tom B.,Printer on 3rd floor jammed,"The big printer by the 3rd floor kitchen keeps jamming on tray 2. People are using the one downstairs for now. Can someone take a look when you get a chance?"
+T009,Rachel D.,VPN keeps disconnecting,"Working from home today and the VPN drops every 10-15 minutes. I reconnect but it's killing my productivity. Internet otherwise seems fine. Only me as far as I know."
+T010,Unknown,Possible malware popup,"A coworker's screen showed a full-screen popup saying their files are encrypted and demanding payment. They unplugged the network cable like the poster said. What do we do?"
