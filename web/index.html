@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Ticket Triage</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --panel2:#1e2740; --line:#2a3550;
+    --text:#e8edf7; --muted:#95a3c0; --accent:#5b8cff; --accent2:#8a6bff;
+    --p1:#ff5468; --p2:#ff9a3d; --p3:#ffd23d; --p4:#3ddc84;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, #1b2440 0%, var(--bg) 55%); color:var(--text);
+    min-height:100vh;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:18px 26px; border-bottom:1px solid var(--line);
+    background:rgba(15,20,32,.6); backdrop-filter:blur(8px); position:sticky; top:0; z-index:5;
+  }
+  .brand{display:flex; align-items:center; gap:12px}
+  .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); font-weight:800; color:#fff}
+  h1{font-size:17px; margin:0; letter-spacing:.2px}
+  h1 small{display:block; font-size:12px; color:var(--muted); font-weight:500}
+  .badge{font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:999px;
+    padding:5px 11px; display:flex; align-items:center; gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--p4);box-shadow:0 0 8px var(--p4)}
+  .navbar{max-width:1180px; margin:0 auto; padding:0 26px; display:flex; gap:2px;
+    border-bottom:1px solid var(--line)}
+  .navitem{padding:14px 16px; color:var(--muted); cursor:pointer; font-size:14px; font-weight:550;
+    border-bottom:2px solid transparent; margin-bottom:-1px; text-decoration:none; user-select:none}
+  .navitem:hover{color:var(--text)}
+  .navitem.active{color:var(--text); border-bottom-color:var(--accent)}
+  main{max-width:1180px; margin:0 auto; padding:26px}
+  .view{display:none}
+  .view.active{display:block}
+  .view-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px}
+  @media(max-width:860px){ .view-grid{grid-template-columns:1fr} }
+
+  /* dashboard */
+  .dash-tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px}
+  @media(max-width:700px){ .dash-tiles{grid-template-columns:repeat(2,1fr)} }
+  .tile{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px}
+  .tile .n{font-size:30px; font-weight:800; line-height:1}
+  .tile .l{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-top:6px}
+  .tile.open .n{color:var(--p4)} .tile.closed .n{color:var(--muted)}
+  .pbar{display:flex; align-items:center; gap:12px; margin:10px 0}
+  .pbar .plabel{width:28px; font-weight:700; font-size:13px}
+  .pbar .ptrack{flex:1; height:12px; background:var(--panel2); border-radius:6px; overflow:hidden}
+  .pbar .pfill{height:100%; border-radius:6px}
+  .pbar .pfill.P1{background:var(--p1)} .pbar .pfill.P2{background:var(--p2)}
+  .pbar .pfill.P3{background:var(--p3)} .pbar .pfill.P4{background:var(--p4)}
+  .pbar .pcount{width:28px; text-align:right; color:var(--muted); font-size:13px}
+  .dash-cols{display:grid; grid-template-columns:1fr 1fr; gap:22px}
+  @media(max-width:860px){ .dash-cols{grid-template-columns:1fr} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px}
+  .card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px}
+  .card h2{font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:0}
+  .ref{font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--accent);
+    background:rgba(91,140,255,.1); border:1px solid rgba(91,140,255,.25); border-radius:7px; padding:4px 9px}
+  .ref.none{color:var(--muted); background:transparent; border-color:var(--line)}
+  label{display:block; font-size:12px; color:var(--muted); margin:12px 0 6px}
+  input,textarea{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:11px 13px; font:inherit; resize:vertical;
+  }
+  input:focus,textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,140,255,.18)}
+  textarea{min-height:140px}
+  .row{display:flex; gap:12px}
+  .row>div{flex:1}
+  .actions{display:flex; gap:10px; margin-top:18px; align-items:center; flex-wrap:wrap}
+  button.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:0;
+    padding:12px 20px; border-radius:10px; font-weight:650; cursor:pointer; font-size:14px;
+  }
+  button.primary:disabled{opacity:.55; cursor:not-allowed}
+  button.ghost{background:transparent; color:var(--muted); border:1px solid var(--line);
+    padding:12px 16px; border-radius:10px; cursor:pointer}
+  button.ghost:hover{color:var(--text); border-color:var(--accent)}
+  .hint{font-size:12px; color:var(--muted)}
+
+  /* result */
+  #result .empty{color:var(--muted); text-align:center; padding:40px 10px}
+  .pri-head{display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+  .pri{font-weight:800; font-size:13px; padding:5px 12px; border-radius:8px; color:#0c1020}
+  .pri.P1{background:var(--p1)} .pri.P2{background:var(--p2)}
+  .pri.P3{background:var(--p3)} .pri.P4{background:var(--p4)}
+  .pri-sub{font-size:13px; color:var(--muted)}
+  .summary{font-size:16px; font-weight:600; margin:2px 0 16px; line-height:1.4}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px}
+  @media(max-width:520px){ .grid{grid-template-columns:1fr} }
+  .field{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+  .field .k{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted)}
+  .field .v{font-weight:600; margin-top:3px}
+  .flow{color:var(--accent)}
+  .tags{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+  .tag{font-size:12px; background:rgba(91,140,255,.12); color:#aec0ff; border:1px solid rgba(91,140,255,.25);
+    border-radius:999px; padding:3px 10px}
+  .section-t{font-size:11px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin:18px 0 8px}
+  ul.q{margin:0; padding-left:18px} ul.q li{margin:4px 0; color:#dfe6f5}
+  .reply{position:relative; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:10px; padding:14px 14px; white-space:pre-wrap; line-height:1.55}
+  .copy{position:absolute; top:10px; right:10px; font-size:12px; background:var(--panel);
+    border:1px solid var(--line); color:var(--muted); border-radius:7px; padding:5px 9px; cursor:pointer}
+  .copy:hover{color:var(--text); border-color:var(--accent)}
+  .reason{font-size:13px; color:var(--muted); font-style:italic; margin-top:-6px; margin-bottom:4px}
+  .reply-cta{margin-top:12px}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);
+    border-top-color:var(--accent); animation:spin .8s linear infinite; margin:30px auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{background:rgba(255,84,104,.1); border:1px solid rgba(255,84,104,.35); color:#ffb9c1;
+    border-radius:10px; padding:12px 14px}
+  footer{max-width:1180px; margin:0 auto; padding:8px 26px 30px; color:var(--muted); font-size:12px}
+  footer a{color:var(--accent); text-decoration:none}
+
+  /* reply modal */
+  .overlay{position:fixed; inset:0; background:rgba(6,9,16,.68); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:20; padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel); border:1px solid var(--line); border-radius:16px; width:100%;
+    max-width:560px; padding:22px; box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px}
+  .modal-title{font-size:16px; font-weight:700}
+  .modal-ref{font-size:12px; font-family:ui-monospace,Menlo,monospace; color:var(--accent); margin-top:3px}
+  .modal-x{background:transparent; border:0; color:var(--muted); font-size:22px; cursor:pointer; line-height:1}
+  .thread{margin-top:14px; max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px}
+  .msg{background:var(--panel2); border:1px solid var(--line); border-radius:9px; padding:9px 11px}
+  .msg .meta{font-size:11px; color:var(--muted); margin-bottom:3px; display:flex; gap:8px; align-items:center}
+  .msg .src{font-size:10px; text-transform:uppercase; letter-spacing:.5px; border:1px solid var(--line);
+    border-radius:5px; padding:1px 6px}
+  .msg .src.ai{color:#aec0ff; border-color:rgba(91,140,255,.4)}
+  .msg .txt{white-space:pre-wrap; line-height:1.5; font-size:14px}
+  .modal-actions{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px}
+  .modal-actions>div{display:flex; gap:8px}
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#15351f; border:1px solid rgba(61,220,132,.4); color:#c7f7d9; padding:11px 18px;
+    border-radius:10px; font-size:14px; opacity:0; transition:.25s; z-index:30; pointer-events:none}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* auth screen */
+  .authscreen{position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center;
+    padding:20px; background:radial-gradient(1000px 500px at 50% -10%, #1b2440 0%, var(--bg) 60%)}
+  .authcard{background:var(--panel); border:1px solid var(--line); border-radius:16px; width:100%;
+    max-width:380px; padding:28px; box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .authcard .logo{width:44px; height:44px; font-size:20px; margin:0 auto 14px}
+  .authcard h2{margin:0 0 4px; text-align:center; font-size:20px}
+  .authcard .sub{text-align:center; margin:0 0 18px}
+  .authtoggle{text-align:center; margin:16px 0 0}
+  .authtoggle a{color:var(--accent); cursor:pointer; text-decoration:none}
+  .accstat{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:14px 0}
+  .accstat .field{text-align:center}
+  .accstat .field .v{font-size:22px}
+
+  /* activity timeline */
+  .activity{grid-column:1 / -1}
+  .timeline{position:relative; padding-left:26px}
+  .timeline::before{content:""; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:var(--line)}
+  .event{position:relative; padding:0 0 18px}
+  .event:last-child{padding-bottom:2px}
+  .event .node{position:absolute; left:-26px; top:2px; width:18px; height:18px; border-radius:50%;
+    background:var(--panel); border:2px solid var(--accent); display:grid; place-items:center; font-size:9px}
+  .event.received .node{border-color:var(--muted)}
+  .event.triaged .node{border-color:var(--accent2)}
+  .event.reply .node{border-color:var(--p4)}
+  .event .etop{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .event .etype{font-weight:650; font-size:14px}
+  .event .etime{font-size:11px; color:var(--muted); font-family:ui-monospace,Menlo,monospace}
+  .event .edetail{font-size:14px; color:#dfe6f5; margin-top:4px; white-space:pre-wrap; line-height:1.5}
+  .event .emeta{font-size:12px; color:var(--muted); margin-top:2px}
+  .pill{font-size:11px; padding:2px 8px; border-radius:6px; font-weight:700; color:#0c1020}
+  .pill.P1{background:var(--p1)} .pill.P2{background:var(--p2)}
+  .pill.P3{background:var(--p3)} .pill.P4{background:var(--p4)}
+  .srctag{font-size:10px; text-transform:uppercase; letter-spacing:.5px; border:1px solid var(--line);
+    border-radius:5px; padding:1px 6px; color:var(--muted)}
+  .srctag.ai{color:#aec0ff; border-color:rgba(91,140,255,.4)}
+  .event.closed .node{border-color:var(--p1)}
+  .event.reopened .node{border-color:var(--accent)}
+
+  .statuspill{font-size:11px; font-weight:700; letter-spacing:.6px; padding:3px 9px; border-radius:6px}
+  .statuspill.open{background:rgba(61,220,132,.15); color:#9fe9bd; border:1px solid rgba(61,220,132,.4)}
+  .statuspill.closed{background:rgba(149,163,192,.12); color:var(--muted); border:1px solid var(--line)}
+
+  /* saved tickets list */
+  .tickets{grid-column:1 / -1}
+  .filterbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
+  .filterbar .search{flex:1; min-width:200px; width:auto}
+  .filterbar select{background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:9px; padding:9px 11px; font:inherit; cursor:pointer}
+  .filterbar select:focus{outline:none; border-color:var(--accent)}
+  .ticketlist{display:flex; flex-direction:column; gap:6px; max-height:240px; overflow:auto}
+  .trow{display:flex; align-items:center; gap:10px; padding:9px 11px; border:1px solid var(--line);
+    border-radius:9px; background:var(--panel2); cursor:pointer; transition:.12s}
+  .trow:hover{border-color:var(--accent)}
+  .trow.active{border-color:var(--accent); box-shadow:0 0 0 2px rgba(91,140,255,.22)}
+  .sdot{width:9px; height:9px; border-radius:50%; flex:0 0 auto}
+  .sdot.open{background:var(--p4)} .sdot.closed{background:var(--muted)}
+  .trow .tref{font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--accent); flex:0 0 auto}
+  .trow .tsubj{flex:1; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .trow .tupd{font-size:11px; color:var(--muted); flex:0 0 auto}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">T</div>
+    <h1>AI Ticket Triage <small>classify &middot; prioritize &middot; route &middot; reply</small></h1>
+  </div>
+  <div style="display:flex; gap:10px; align-items:center">
+    <div class="badge"><span class="dot" id="dot"></span><span id="backend">connecting&hellip;</span></div>
+    <button class="ghost" id="accountBtn" style="display:none; padding:7px 13px">Account</button>
+  </div>
+</header>
+
+<nav class="navbar" id="navbar" style="display:none">
+  <a class="navitem active" data-view="dashboard">Dashboard</a>
+  <a class="navitem" data-view="queue">Queue</a>
+  <a class="navitem" data-view="assigned">Assigned to me</a>
+  <a class="navitem" data-view="settings">Settings</a>
+</nav>
+
+<main>
+  <section class="view active" id="view-dashboard"></section>
+
+  <section class="view" id="view-queue"><div class="view-grid">
+  <section class="card tickets" id="ticketsCard">
+    <div class="card-head">
+      <h2>Saved tickets <span id="ticketsCount" class="hint"></span></h2>
+      <button class="ghost" id="newTicket" style="padding:7px 12px">+ New ticket</button>
+    </div>
+    <div class="filterbar">
+      <input id="searchBox" class="search" placeholder="Search subject, body, or reference…">
+      <select id="filterStatus">
+        <option value="">All statuses</option>
+        <option value="open">Open</option>
+        <option value="closed">Closed</option>
+      </select>
+      <select id="filterPriority">
+        <option value="">All priorities</option>
+        <option value="P1">P1 — Critical</option>
+        <option value="P2">P2 — High</option>
+        <option value="P3">P3 — Medium</option>
+        <option value="P4">P4 — Low</option>
+      </select>
+      <button class="ghost" id="clearFilters" style="padding:8px 12px">Reset</button>
+    </div>
+    <div class="ticketlist" id="ticketList"><span class="hint">loading&hellip;</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Incoming ticket</h2>
+      <div style="display:flex; gap:8px; align-items:center">
+        <span class="statuspill" id="statusPill" style="display:none">OPEN</span>
+        <span class="ref none" id="refBadge">no ref yet</span>
+      </div>
+    </div>
+    <div class="row">
+      <div><label for="subject">Subject</label><input id="subject" placeholder="e.g. Can't access shared drive"></div>
+      <div><label for="requester">Requester <span class="hint">(optional)</span></label><input id="requester" placeholder="e.g. Dana R. (Finance)"></div>
+    </div>
+    <label for="body">Description</label>
+    <textarea id="body" placeholder="Paste the user's message here..."></textarea>
+
+    <div class="actions">
+      <button class="primary" id="go">Triage ticket</button>
+      <button class="ghost" id="quickReply">Quick reply</button>
+      <button class="ghost" id="closeBtn">Close ticket</button>
+      <button class="ghost" id="clear">Clear</button>
+      <span class="hint" id="timing"></span>
+    </div>
+  </section>
+
+  <section class="card" id="result">
+    <div class="card-head"><h2>Triage result</h2></div>
+    <div class="empty">Submit a ticket to see its priority, routing, and a drafted reply.</div>
+  </section>
+
+  <section class="card activity" id="activityCard" style="display:none">
+    <div class="card-head"><h2>Ticket activity</h2><span class="ref" id="activityRef"></span></div>
+    <div class="timeline" id="timeline"></div>
+  </section>
+  </div></section>
+
+  <section class="view" id="view-assigned">
+    <div class="card">
+      <div class="card-head"><h2>Assigned to me <span id="assignedCount" class="hint"></span></h2>
+        <span class="hint">your open tickets</span></div>
+      <div class="ticketlist" id="assignedList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="card">
+      <div class="card-head"><h2>Account</h2></div>
+      <div id="settingsAccount" class="hint">loading…</div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <div class="card-head"><h2>Change password</h2></div>
+      <label for="pwOld">Current password</label>
+      <input id="pwOld" type="password" autocomplete="current-password">
+      <label for="pwNew">New password</label>
+      <input id="pwNew" type="password" autocomplete="new-password" placeholder="at least 6 characters">
+      <div class="err" id="pwErr" style="display:none; margin-top:10px"></div>
+      <div class="actions"><button class="primary" id="pwSave">Update password</button></div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <div class="card-head"><h2>About</h2></div>
+      <div class="hint" id="settingsAbout"></div>
+      <div class="actions"><button class="ghost" id="settingsLogout">Log out</button></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Runs locally against your own Claude account &middot; built by Brian Hobbins &middot;
+  <a href="https://github.com/brian-hobbins/ticket-triage-agent" target="_blank" rel="noopener">source on GitHub</a>
+</footer>
+
+<!-- reply composer -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modalTitle">Reply to ticket</div>
+        <div class="modal-ref" id="modalRef"></div>
+      </div>
+      <button class="modal-x" id="modalClose" title="Close">&times;</button>
+    </div>
+    <label for="replyTo">To</label>
+    <input id="replyTo" placeholder="Requester">
+    <label for="replyBody">Message</label>
+    <textarea id="replyBody" placeholder="Type your reply..."></textarea>
+    <div class="thread" id="thread"></div>
+    <div class="modal-actions">
+      <span class="hint">Saved to the ticket's conversation log.</span>
+      <div>
+        <button class="ghost" id="replyCancel">Close</button>
+        <button class="primary" id="replySend">Send reply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- close ticket -->
+<div class="overlay" id="closeOverlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Close ticket</div>
+        <div class="modal-ref" id="closeModalRef"></div>
+      </div>
+      <button class="modal-x" id="closeModalX" title="Cancel">&times;</button>
+    </div>
+    <label for="resolution">Resolution <span class="hint">(optional)</span></label>
+    <textarea id="resolution" placeholder="How was this resolved? e.g. Reset password and unlocked account." style="min-height:90px"></textarea>
+    <div class="modal-actions">
+      <span class="hint">Recorded in the ticket's activity log.</span>
+      <div>
+        <button class="ghost" id="closeModalCancel">Cancel</button>
+        <button class="primary" id="closeConfirm">Close ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- auth gate -->
+<div class="authscreen" id="authScreen">
+  <div class="authcard">
+    <div class="logo">T</div>
+    <h2 id="authTitle">Sign in</h2>
+    <p class="sub hint" id="authSub">Welcome back to your triage console</p>
+    <label for="authUser">Username</label>
+    <input id="authUser" autocomplete="username" placeholder="your username">
+    <label for="authPass">Password</label>
+    <input id="authPass" type="password" autocomplete="current-password" placeholder="••••••••">
+    <div class="err" id="authErr" style="display:none; margin-top:12px"></div>
+    <button class="primary" id="authSubmit" style="width:100%; margin-top:16px">Sign in</button>
+    <p class="authtoggle hint">
+      <span id="authToggleText">New here?</span>
+      <a id="authToggle">Create an account</a>
+    </p>
+  </div>
+</div>
+
+<!-- my account -->
+<div class="overlay" id="accountOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <div><div class="modal-title">My account</div><div class="modal-ref" id="accountName"></div></div>
+      <button class="modal-x" id="accountX" title="Close">&times;</button>
+    </div>
+    <div class="accstat">
+      <div class="field"><div class="k">Total</div><div class="v" id="accTotal">0</div></div>
+      <div class="field"><div class="k">Open</div><div class="v" id="accOpen">0</div></div>
+      <div class="field"><div class="k">Closed</div><div class="v" id="accClosed">0</div></div>
+    </div>
+    <div class="modal-actions">
+      <span class="hint" id="accJoined"></span>
+      <div><button class="primary" id="logoutBtn">Log out</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+let currentRef = null;    // reference for the ticket currently in the form
+let lastDraft  = "";      // last AI-generated reply, for "reply with this draft"
+let activity   = [];      // timeline of events for currentRef
+let isClosed   = false;   // current ticket status
+
+function setRef(ref){
+  currentRef = ref;
+  const b = $('#refBadge');
+  if(ref){ b.textContent = ref; b.classList.remove('none'); }
+  else   { b.textContent = 'no ref yet'; b.classList.add('none'); }
+  $('#activityRef').textContent = ref || '';
+}
+function setStatus(closed){
+  isClosed = closed;
+  const p = $('#statusPill');
+  if(!currentRef){ p.style.display='none'; }
+  else{
+    p.style.display='inline-block';
+    p.textContent = closed ? 'CLOSED' : 'OPEN';
+    p.className = 'statuspill ' + (closed ? 'closed' : 'open');
+  }
+  $('#closeBtn').textContent = closed ? 'Reopen ticket' : 'Close ticket';
+}
+function resetTicket(){
+  setRef(null); activity = []; lastDraft = "";
+  setStatus(false);
+  $('#activityCard').style.display = 'none';
+  $('#timeline').innerHTML = '';
+}
+
+function fmtTime(iso){
+  const d = iso ? new Date(iso) : new Date();
+  return d.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+function setActivity(events){
+  activity = events || [];
+  renderActivity();
+  renderThread();
+}
+function renderActivity(){
+  if(!activity.length){ $('#activityCard').style.display='none'; return; }
+  $('#activityCard').style.display='block';
+  $('#timeline').innerHTML = activity.map(ev=>{
+    let icon='•', type='', detail='', meta='';
+    if(ev.type==='received'){ icon='✉'; type='Ticket received';
+      detail = esc(ev.subject||'(no subject)'); meta = ev.requester ? 'from '+esc(ev.requester) : ''; }
+    else if(ev.type==='triaged'){ icon='⚑'; type='Triaged';
+      detail = `<span class="pill ${esc(ev.priority)}">${esc(ev.priority)}</span> ${esc(ev.category)} &rarr; <span class="flow">${esc(ev.assignment_group)}</span>`;
+      meta = 'SLA: '+esc(ev.sla_response); }
+    else if(ev.type==='reply'){ icon='↩'; type='Reply sent';
+      detail = esc(ev.body);
+      meta = `<span class="srctag ${ev.source==='ai-draft'?'ai':''}">${ev.source==='ai-draft'?'AI draft':'manual'}</span>`; }
+    else if(ev.type==='closed'){ icon='✔'; type='Ticket closed';
+      detail = ev.resolution ? esc(ev.resolution) : '<span class="hint">no resolution note</span>'; }
+    else if(ev.type==='reopened'){ icon='↻'; type='Ticket reopened'; detail=''; }
+    return `<div class="event ${ev.type}">
+      <div class="node">${icon}</div>
+      <div class="etop"><span class="etype">${type}</span><span class="etime">${esc(fmtTime(ev.at))}</span></div>
+      <div class="edetail">${detail}</div>
+      ${meta?`<div class="emeta">${meta}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function ensureRef(){
+  if(currentRef) return currentRef;
+  const d = await (await fetch('/api/open',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({subject:$('#subject').value, requester:$('#requester').value, body:$('#body').value})})).json();
+  setRef(d.reference); setStatus(false); setActivity(d.events);
+  refreshTickets();
+  return currentRef;
+}
+
+async function health(){
+  try{ const d = await (await fetch('/api/health')).json(); $('#backend').textContent='backend: '+d.backend; }
+  catch(e){ $('#backend').textContent='offline'; $('#dot').style.background='var(--p1)'; }
+}
+
+function ticketQuery(){
+  const p = new URLSearchParams();
+  const q = $('#searchBox').value.trim(); if(q) p.set('q', q);
+  const s = $('#filterStatus').value; if(s) p.set('status', s);
+  const pr = $('#filterPriority').value; if(pr) p.set('priority', pr);
+  const qs = p.toString();
+  return qs ? '?'+qs : '';
+}
+function filtersActive(){
+  return $('#searchBox').value.trim() || $('#filterStatus').value || $('#filterPriority').value;
+}
+function ticketRow(t){
+  return `<div class="trow ${t.reference===currentRef?'active':''}" data-ref="${esc(t.reference)}">
+    <span class="sdot ${t.status==='closed'?'closed':'open'}" title="${esc(t.status)}"></span>
+    <span class="tref">${esc(t.reference)}</span>
+    ${t.priority?`<span class="pill ${esc(t.priority)}">${esc(t.priority)}</span>`:''}
+    <span class="tsubj">${esc(t.subject||'(no subject)')}</span>
+    <span class="tupd">${esc(fmtTime(t.updated_at))}</span>
+  </div>`;
+}
+function wireRows(box, toQueue){
+  box.querySelectorAll('.trow').forEach(el=> el.onclick = ()=>{ if(toQueue) switchView('queue'); loadTicket(el.dataset.ref); });
+}
+async function refreshTickets(){
+  try{
+    const r = await fetch('/api/tickets'+ticketQuery());
+    if(r.status===401){ showAuth(); return; }
+    const list = await r.json();
+    $('#ticketsCount').textContent = list.length ? '('+list.length+')' : '';
+    const box = $('#ticketList');
+    if(!list.length){
+      box.innerHTML = filtersActive()
+        ? '<span class="hint">No tickets match your search or filters.</span>'
+        : '<span class="hint">No saved tickets yet — triage or reply to one and it appears here.</span>';
+      return;
+    }
+    box.innerHTML = list.map(ticketRow).join('');
+    wireRows(box, false);
+  }catch(e){ $('#ticketList').innerHTML = '<span class="hint">could not load tickets</span>'; }
+}
+
+/* ---- navigation + views ---- */
+function switchView(name){
+  document.querySelectorAll('.navitem').forEach(n=> n.classList.toggle('active', n.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=> v.classList.toggle('active', v.id==='view-'+name));
+  if(name==='dashboard') renderDashboard();
+  else if(name==='assigned') renderAssigned();
+  else if(name==='settings') renderSettings();
+}
+
+async function renderDashboard(){
+  const el = $('#view-dashboard');
+  try{
+    const list = await (await fetch('/api/tickets')).json();
+    const by = {P1:0,P2:0,P3:0,P4:0}; let open=0, closed=0, untriaged=0;
+    list.forEach(t=>{ if(t.status==='closed') closed++; else open++;
+      if(by[t.priority]!==undefined) by[t.priority]++; else untriaged++; });
+    const maxp = Math.max(1, by.P1, by.P2, by.P3, by.P4);
+    const recent = list.slice(0,6);
+    el.innerHTML = `
+      <div class="dash-tiles">
+        <div class="tile"><div class="n">${list.length}</div><div class="l">Total tickets</div></div>
+        <div class="tile open"><div class="n">${open}</div><div class="l">Open</div></div>
+        <div class="tile closed"><div class="n">${closed}</div><div class="l">Closed</div></div>
+        <div class="tile"><div class="n">${untriaged}</div><div class="l">Untriaged</div></div>
+      </div>
+      <div class="dash-cols">
+        <div class="card">
+          <div class="card-head"><h2>By priority</h2></div>
+          ${['P1','P2','P3','P4'].map(p=>`
+            <div class="pbar"><span class="plabel">${p}</span>
+              <span class="ptrack"><span class="pfill ${p}" style="width:${by[p]/maxp*100}%"></span></span>
+              <span class="pcount">${by[p]}</span></div>`).join('')}
+          ${untriaged?`<div class="hint" style="margin-top:8px">${untriaged} ticket(s) not yet triaged</div>`:''}
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Recent activity</h2></div>
+          <div class="ticketlist" id="dashRecent">${recent.length?recent.map(ticketRow).join(''):'<span class="hint">No tickets yet.</span>'}</div>
+        </div>
+      </div>`;
+    wireRows($('#dashRecent'), true);
+  }catch(e){ el.innerHTML = '<div class="card"><span class="hint">Could not load dashboard.</span></div>'; }
+}
+
+async function renderAssigned(){
+  const box = $('#assignedList');
+  try{
+    const list = await (await fetch('/api/tickets?status=open')).json();
+    $('#assignedCount').textContent = list.length ? '('+list.length+')' : '';
+    box.innerHTML = list.length ? list.map(ticketRow).join('')
+      : '<span class="hint">Nothing open — your queue is clear. 🎉</span>';
+    wireRows(box, true);
+  }catch(e){ box.innerHTML = '<span class="hint">could not load.</span>'; }
+}
+
+async function renderSettings(){
+  try{
+    const d = await (await fetch('/api/me')).json();
+    if(d.user){
+      $('#settingsAccount').innerHTML =
+        `<div><strong>${esc(d.user.username)}</strong></div>`+
+        `<div class="hint" style="margin-top:4px">Member since ${esc(fmtTime(d.user.created_at))} · `+
+        `${d.stats.total} tickets (${d.stats.open} open, ${d.stats.closed} closed)</div>`;
+    }
+  }catch(e){ $('#settingsAccount').textContent = 'Could not load account.'; }
+  try{
+    const h = await (await fetch('/api/health')).json();
+    $('#settingsAbout').textContent = 'AI Ticket Triage · model backend: '+h.backend+' · data stored locally in SQLite.';
+  }catch(e){}
+}
+async function changePassword(){
+  const oldp = $('#pwOld').value, newp = $('#pwNew').value;
+  const err = $('#pwErr'); err.style.display='none';
+  if(!oldp || newp.length<6){ err.textContent='Enter your current password and a new one (6+ chars).'; err.style.display='block'; return; }
+  const btn=$('#pwSave'); btn.disabled=true;
+  try{
+    const r = await fetch('/api/password',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({old:oldp, new:newp})});
+    const d = await r.json();
+    if(!r.ok){ err.textContent=d.error||('HTTP '+r.status); err.style.display='block'; return; }
+    $('#pwOld').value=''; $('#pwNew').value=''; toast('Password updated');
+  }catch(e){ err.textContent='Network error'; err.style.display='block'; }
+  finally{ btn.disabled=false; }
+}
+
+async function loadTicket(ref){
+  try{
+    const t = await (await fetch('/api/ticket?ref='+encodeURIComponent(ref))).json();
+    if(t.error){ toast('Could not load '+ref); return; }
+    $('#subject').value = t.subject||'';
+    $('#requester').value = t.requester||'';
+    $('#body').value = t.body||'';
+    setRef(t.reference);
+    setStatus(t.status==='closed');
+    setActivity(t.events);
+    if(t.triage){ render(t.triage); }
+    else{ $('#result').innerHTML = '<div class="card-head"><h2>Triage result</h2></div><div class="empty">This ticket hasn\'t been triaged yet. Click “Triage ticket”.</div>'; }
+    refreshTickets();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(e){ toast('Error loading ticket'); }
+}
+
+function field(k,v){ return `<div class="field"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+
+function render(r){
+  lastDraft = r.suggested_reply || "";
+  const tags = (r.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(' ') || '<span class="hint">—</span>';
+  const qs = (r.needs_more_info && r.clarifying_questions && r.clarifying_questions.length)
+    ? `<div class="section-t">Needs more info — ask the requester</div><ul class="q">${r.clarifying_questions.map(q=>`<li>${esc(q)}</li>`).join('')}</ul>` : '';
+  $('#result').innerHTML = `
+    <div class="card-head"><h2>Triage result</h2><span class="ref">${esc(r.ticket_id||currentRef||'')}</span></div>
+    <div class="pri-head">
+      <span class="pri ${esc(r.priority)}">${esc(r.priority)}</span>
+      <span class="pri-sub">first response: ${esc(r.sla_response)}</span>
+    </div>
+    <div class="summary">${esc(r.summary)}</div>
+    <div class="grid">
+      ${field('Category', esc(r.category))}
+      ${field('Route to', '<span class="flow">'+esc(r.assignment_group)+'</span>')}
+      ${field('Sentiment', esc(r.sentiment))}
+      ${field('Tags', tags)}
+    </div>
+    <div class="reason">Why this priority: ${esc(r.priority_reason)}</div>
+    ${qs}
+    <div class="section-t">Drafted reply to requester</div>
+    <div class="reply"><button class="copy" id="copy">Copy</button>${esc(r.suggested_reply)}</div>
+    <div class="reply-cta"><button class="primary" id="replyDraft">Reply with this draft</button></div>
+  `;
+  const cp = $('#copy');
+  if(cp) cp.onclick = ()=>{ navigator.clipboard.writeText(lastDraft); cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy',1200); };
+  $('#replyDraft').onclick = ()=> openReply(lastDraft, 'ai-draft');
+}
+
+async function triage(){
+  const body = $('#body').value.trim();
+  if(!body){ $('#body').focus(); return; }
+  $('#go').disabled=true; $('#timing').textContent='';
+  $('#result').innerHTML = `<div class="card-head"><h2>Triage result</h2></div><div class="spinner"></div><div class="empty">Analyzing ticket&hellip;</div>`;
+  const t0 = performance.now();
+  try{
+    await ensureRef();
+    const r = await fetch('/api/triage',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:currentRef, subject:$('#subject').value, requester:$('#requester').value, body})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || ('HTTP '+r.status));
+    setRef(d.reference || d.ticket_id || currentRef);
+    render(d);
+    setActivity(d.events);
+    refreshTickets();
+    $('#timing').textContent = ((performance.now()-t0)/1000).toFixed(1)+'s';
+  }catch(e){
+    $('#result').innerHTML = `<div class="card-head"><h2>Triage result</h2></div><div class="err">${esc(e.message)}</div>`;
+  }finally{ $('#go').disabled=false; }
+}
+
+/* ---- reply composer ---- */
+function renderThread(){
+  const box = $('#thread');
+  const replies = activity.filter(e=>e.type==='reply');
+  box.innerHTML = replies.map(m=>`
+    <div class="msg">
+      <div class="meta"><span>${esc(fmtTime(m.at))}</span><span class="src ${m.source==='ai-draft'?'ai':''}">${m.source==='ai-draft'?'AI draft':'manual'}</span></div>
+      <div class="txt">${esc(m.body)}</div>
+    </div>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+async function openReply(prefill, source){
+  await ensureRef();
+  $('#modalRef').textContent = currentRef;
+  $('#modalTitle').textContent = source==='ai-draft' ? 'Reply with AI draft' : 'Reply to ticket';
+  $('#replyTo').value = $('#requester').value || 'Requester';
+  $('#replyBody').value = prefill || "";
+  $('#replySend').dataset.source = source || 'manual';
+  renderThread();
+  $('#overlay').classList.add('show');
+  $('#replyBody').focus();
+}
+function closeReply(){ $('#overlay').classList.remove('show'); }
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+async function sendReply(){
+  const body = $('#replyBody').value.trim();
+  if(!body){ $('#replyBody').focus(); return; }
+  const btn = $('#replySend'); btn.disabled=true;
+  try{
+    const r = await fetch('/api/reply',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({reference:currentRef, to:$('#replyTo').value, subject:$('#subject').value,
+                           body, source:btn.dataset.source})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+    setActivity(d.events);
+    refreshTickets();
+    $('#replyBody').value="";
+    toast('Reply sent · '+d.reference);
+  }catch(e){ toast('Error: '+e.message); }
+  finally{ btn.disabled=false; }
+}
+
+/* ---- close / reopen ---- */
+function openCloseModal(){
+  if(isClosed){ reopenTicket(); return; }
+  ensureRef().then(()=>{
+    $('#closeModalRef').textContent = currentRef;
+    $('#resolution').value = '';
+    $('#closeOverlay').classList.add('show');
+    $('#resolution').focus();
+  });
+}
+function closeCloseModal(){ $('#closeOverlay').classList.remove('show'); }
+async function postStatus(status, resolution){
+  await ensureRef();
+  const r = await fetch('/api/status',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({reference:currentRef, status, resolution:resolution||''})});
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+  return d;
+}
+async function confirmClose(){
+  const btn = $('#closeConfirm'); btn.disabled=true;
+  try{
+    const res = $('#resolution').value.trim();
+    const d = await postStatus('closed', res);
+    setActivity(d.events); refreshTickets();
+    setStatus(true); closeCloseModal();
+    toast('Ticket closed · '+d.reference);
+  }catch(e){ toast('Error: '+e.message); }
+  finally{ btn.disabled=false; }
+}
+async function reopenTicket(){
+  try{
+    const d = await postStatus('open');
+    setActivity(d.events); refreshTickets();
+    setStatus(false);
+    toast('Ticket reopened · '+d.reference);
+  }catch(e){ toast('Error: '+e.message); }
+}
+
+$('#go').onclick = triage;
+$('#quickReply').onclick = ()=> openReply('', 'manual');
+$('#closeBtn').onclick = openCloseModal;
+$('#closeModalX').onclick = closeCloseModal;
+$('#closeModalCancel').onclick = closeCloseModal;
+$('#closeConfirm').onclick = confirmClose;
+$('#closeOverlay').onclick = e=>{ if(e.target===$('#closeOverlay')) closeCloseModal(); };
+function newTicket(){
+  ['#subject','#requester','#body'].forEach(s=>$(s).value=''); resetTicket();
+  $('#result').innerHTML = '<div class="card-head"><h2>Triage result</h2></div><div class="empty">Submit a ticket to see its priority, routing, and a drafted reply.</div>';
+  refreshTickets();
+  $('#subject').focus();
+}
+$('#clear').onclick = newTicket;
+$('#newTicket').onclick = newTicket;
+
+let searchTimer;
+$('#searchBox').addEventListener('input', ()=>{ clearTimeout(searchTimer); searchTimer=setTimeout(refreshTickets, 250); });
+$('#filterStatus').onchange = refreshTickets;
+$('#filterPriority').onchange = refreshTickets;
+$('#clearFilters').onclick = ()=>{ $('#searchBox').value=''; $('#filterStatus').value=''; $('#filterPriority').value=''; refreshTickets(); };
+$('#modalClose').onclick = closeReply;
+$('#replyCancel').onclick = closeReply;
+$('#replySend').onclick = sendReply;
+$('#overlay').onclick = e=>{ if(e.target===$('#overlay')) closeReply(); };
+$('#body').addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') triage(); });
+
+/* ---- auth / account ---- */
+let authMode = 'login';
+function showAuth(){ $('#authScreen').style.display='flex'; $('#accountBtn').style.display='none'; }
+function hideAuth(){ $('#authScreen').style.display='none'; $('#accountBtn').style.display='inline-block'; }
+function showAuthErr(msg){ const e=$('#authErr'); e.textContent=msg; e.style.display='block'; }
+function setAuthMode(mode){
+  authMode = mode; const login = mode==='login';
+  $('#authTitle').textContent = login ? 'Sign in' : 'Create account';
+  $('#authSub').textContent = login ? 'Welcome back to your triage console' : 'Set up your triage console';
+  $('#authSubmit').textContent = login ? 'Sign in' : 'Create account';
+  $('#authToggleText').textContent = login ? 'New here?' : 'Already have an account?';
+  $('#authToggle').textContent = login ? 'Create an account' : 'Sign in';
+  $('#authPass').autocomplete = login ? 'current-password' : 'new-password';
+  $('#authErr').style.display='none';
+}
+async function submitAuth(){
+  const username = $('#authUser').value.trim(), password = $('#authPass').value;
+  if(!username || !password){ showAuthErr('Enter a username and password.'); return; }
+  const btn=$('#authSubmit'); btn.disabled=true;
+  try{
+    const r = await fetch('/api/'+(authMode==='login'?'login':'register'),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const d = await r.json();
+    if(!r.ok){ showAuthErr(d.error||('HTTP '+r.status)); return; }
+    $('#authPass').value=''; hideAuth(); initApp(d.user);
+  }catch(e){ showAuthErr('Network error'); }
+  finally{ btn.disabled=false; }
+}
+async function openAccount(){
+  try{
+    const d = await (await fetch('/api/me')).json();
+    if(d.user) $('#accountName').textContent = d.user.username;
+    if(d.stats){
+      $('#accTotal').textContent=d.stats.total; $('#accOpen').textContent=d.stats.open; $('#accClosed').textContent=d.stats.closed;
+      $('#accJoined').textContent = 'Member since '+fmtTime(d.stats.created_at);
+    }
+    $('#accountOverlay').classList.add('show');
+  }catch(e){ toast('Could not load account'); }
+}
+async function logout(){
+  try{ await fetch('/api/logout',{method:'POST'}); }catch(e){}
+  $('#accountOverlay').classList.remove('show');
+  $('#navbar').style.display='none';
+  newTicket(); $('#ticketList').innerHTML='';
+  setAuthMode('login'); showAuth();
+}
+document.querySelectorAll('.navitem').forEach(n=> n.onclick = ()=> switchView(n.dataset.view));
+$('#pwSave').onclick = changePassword;
+$('#settingsLogout').onclick = logout;
+function initApp(user){
+  $('#accountBtn').textContent = user.username;
+  $('#navbar').style.display = 'flex';
+  refreshTickets();
+  switchView('dashboard');
+}
+async function boot(){
+  health();
+  try{
+    const r = await fetch('/api/me');
+    if(r.ok){ const d = await r.json(); hideAuth(); initApp(d.user); }
+    else { setAuthMode('login'); showAuth(); }
+  }catch(e){ showAuth(); }
+}
+
+$('#authSubmit').onclick = submitAuth;
+$('#authToggle').onclick = ()=> setAuthMode(authMode==='login'?'register':'login');
+$('#authUser').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#authPass').focus(); });
+$('#authPass').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAuth(); });
+$('#accountBtn').onclick = openAccount;
+$('#accountX').onclick = ()=> $('#accountOverlay').classList.remove('show');
+$('#accountOverlay').onclick = e=>{ if(e.target===$('#accountOverlay')) $('#accountOverlay').classList.remove('show'); };
+$('#logoutBtn').onclick = logout;
+
+boot();
+</script>
+</body>
+</html>

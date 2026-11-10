@@ -4,3 +4,8 @@ results.json
 results.csv
 venv/
 .venv/
+.ticket_counter
+data/replies.log
+data/tickets.db
+data/tickets.db-wal
+data/tickets.db-shm

@@ -70,6 +70,55 @@ python3 -m triage.cli --input data/sample_tickets.csv --out results.json
 
 Input CSV columns: `id, requester, subject, body`.
 
+## Web UI
+
+A local, dependency-free web front end is included. Start it and open the page:
+
+```bash
+python3 web.py          # -> http://127.0.0.1:8000
+```
+
+Register an account and your queue is seeded with a starter set of realistic
+tickets (from `data/sample_tickets.csv`) to work through. Open any ticket (or
+type a new one), hit **Triage**, and get the priority, SLA, routing, sentiment,
+tags, clarifying questions, and a copy-to-clipboard drafted reply — rendered as
+a color-coded card.
+
+- **Accounts & login** — register / sign in with a username and password;
+  passwords are stored as **PBKDF2-HMAC-SHA256** hashes (never plaintext) and
+  sessions are HttpOnly cookies. Each account only sees and can act on **its own**
+  tickets (ownership enforced server-side). A **My Account** panel shows your
+  ticket stats and a log-out button.
+- **Persistent tickets (SQLite)** — every ticket and its full event history are
+  stored in `data/tickets.db` (stdlib `sqlite3`), so the queue survives refreshes
+  and restarts. A **Saved tickets** panel lists them; click any one to reload its
+  form, triage result, and activity timeline.
+- **Search & filters** — search the queue by subject, body, or reference, and
+  filter by status (open/closed) and priority (P1–P4); filtering runs in SQL.
+- **Reference IDs** — every ticket gets a unique, sequential reference
+  (`TKT-YYYYMMDD-0007`) shown on both panels.
+- **Activity timeline** — a per-ticket history of every event (received, triaged,
+  reply, closed, reopened), timestamped.
+- **Reply inside the app** — a reply composer. Reach it two ways: **Quick reply**
+  on the incoming side (manual reply) or **Reply with this draft** on the triage
+  side (opens pre-filled with the AI reply, editable before sending).
+- **Close / reopen** — close a ticket with an optional resolution note; status
+  shows as an OPEN/CLOSED pill and is recorded on the timeline.
+
+It calls the same `triage` package, so it runs on your Claude account by default
+(set `ANTHROPIC_API_KEY` + `TRIAGE_BACKEND=api` for the API path). Pure Python
+standard library — no Flask, no ORM, no build step. Endpoints: `GET /api/health`,
+`GET /api/samples`, `GET /api/me`, `GET /api/tickets`, `GET /api/ticket?ref=`,
+`POST /api/register`, `POST /api/login`, `POST /api/logout`, `POST /api/open`,
+`POST /api/triage`, `POST /api/reply`, `POST /api/status` (ticket endpoints
+require a session).
+
+> **Auth scope:** this is solid *demo-grade* authentication — hashed passwords,
+> server-side sessions, per-user data isolation. It is not production-hardened
+> (no HTTPS enforcement, rate limiting, email verification, or password reset),
+> which is appropriate for a local portfolio app. Those would be the next steps
+> for real deployment.
+
 ## How it works
 
 ```

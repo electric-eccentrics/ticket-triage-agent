@@ -1,0 +1,254 @@
+[
+  {
+    "summary": "Dana R. in Finance and her entire team cannot access the Finance shared drive (F:), receiving a 'network path not found' error, blocking today's month-end close.",
+    "category": "Network",
+    "priority": "P1",
+    "priority_reason": "High urgency (hard deadline \u2014 month-end close due today) combined with high impact (an entire team is fully blocked with no workaround on a business-critical function), meeting the P1 threshold for a multi-user outage.",
+    "assignment_group": "Network Operations",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Roughly what time this morning did the error first appear?",
+      "Exactly how many team members are affected, and are they all getting the same 'network path not found' message?",
+      "Can you access any other network drives or shared resources (e.g., the internet, email, other mapped drives)?",
+      "What is the full server/share path for the F: drive if you know it (e.g., \\\\server\\finance)?"
+    ],
+    "suggested_reply": "Hi Dana, thanks for flagging this \u2014 I understand how critical it is with month-end close due today, and I've raised it as a P1 given your whole team is blocked. Our Network team is investigating the F: drive 'network path not found' error now. To speed things up, could you confirm what time it started, how many people are affected, and whether other network drives or the internet still work? We'll keep you updated and prioritize restoring access as quickly as possible.",
+    "tags": [
+      "shared-drive",
+      "network",
+      "finance",
+      "outage",
+      "month-end"
+    ],
+    "sla_response": "15 minutes (critical / outage)",
+    "ticket_id": "T001",
+    "subject": "Cannot access shared drive"
+  },
+  {
+    "summary": "Production SQL Server 'PRD-SQL-01' has exhausted its connection pool and is rejecting new connections, causing timeouts across multiple customer-facing applications.",
+    "category": "Database",
+    "priority": "P1",
+    "priority_reason": "High urgency and high impact: a business-critical production database is actively rejecting connections and multiple customer-facing apps are down, affecting many users right now.",
+    "assignment_group": "Database Administration",
+    "sentiment": "Neutral",
+    "needs_more_info": false,
+    "clarifying_questions": [],
+    "suggested_reply": "Thanks for the alert. We've raised this as a P1 critical incident and engaged our Database Administration team immediately to investigate the maxed-out connection pool on PRD-SQL-01. They'll work to free or expand connections and restore service to the affected customer-facing apps. We'll post updates as we confirm root cause and recovery. If you have additional telemetry (affected app names, connection counts, or recent deployments), please share it to speed diagnosis.",
+    "tags": [
+      "database",
+      "sql-server",
+      "outage",
+      "connection-pool",
+      "production"
+    ],
+    "sla_response": "15 minutes (critical / outage)",
+    "ticket_id": "T007",
+    "subject": "Database connections maxed out"
+  },
+  {
+    "summary": "A coworker encountered a full-screen ransom demand claiming their files are encrypted; they disconnected the network cable.",
+    "category": "Security",
+    "priority": "P1",
+    "priority_reason": "Active ransomware with encryption in progress is a security breach risking data loss and possible lateral spread to other systems, making it a critical outage regardless of current user count.",
+    "assignment_group": "Security Operations",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Who is the affected user and what is their device name/asset tag and physical location?",
+      "What is the exact text on the ransom popup (any ransomware family name, payment amount, or deadline)?",
+      "Approximately when did the popup first appear?",
+      "Is the machine still powered on, and has it been left connected to any docking station, external drives, or shared network storage?",
+      "Are any other machines or shared drives showing similar popups or inaccessible files?"
+    ],
+    "suggested_reply": "Thank you for reporting this quickly and for unplugging the network cable \u2014 that was exactly the right move. Please do NOT power off the machine, pay anything, or click the popup, and leave it disconnected from the network, Wi-Fi, and any external drives. Our Security team is treating this as a critical incident and will contact you immediately. In the meantime, could you tell us the user's name, the device location, and the exact wording on the popup? We're engaging now.",
+    "tags": [
+      "ransomware",
+      "security",
+      "malware",
+      "incident",
+      "data-loss"
+    ],
+    "sla_response": "15 minutes (critical / outage)",
+    "ticket_id": "T010",
+    "subject": "Possible malware popup"
+  },
+  {
+    "summary": "Marco received a suspicious email impersonating IT, claiming his mailbox is full and asking him to verify credentials via a link.",
+    "category": "Security",
+    "priority": "P2",
+    "priority_reason": "Credential-harvesting phishing attempt targeting a user; high urgency as a security threat, though no click or breach confirmed and only one reported user so far \u2014 qualifies as at least P2 per security routing rules.",
+    "assignment_group": "Security Operations",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Can you forward the suspicious email as an attachment (or share the sender's address and the full link URL) so we can analyze it?",
+      "Did you click the link, enter any credentials, or download anything from the email?",
+      "Approximately when did you receive it, and have any colleagues reported a similar message?"
+    ],
+    "suggested_reply": "Hi Marco, thank you for flagging this and for not clicking the link \u2014 that was exactly the right call. This is a classic phishing attempt impersonating IT to steal your password; it is not a legitimate request. Please don't click anything in it. Could you forward the email to us as an attachment so our Security team can investigate and block the sender? If you did happen to click or enter any details, let us know immediately so we can reset your credentials. We'll follow up shortly.",
+    "tags": [
+      "phishing",
+      "email",
+      "credentials",
+      "security",
+      "social-engineering"
+    ],
+    "sla_response": "1 hour (high)",
+    "ticket_id": "T002",
+    "subject": "Weird email asking for my password"
+  },
+  {
+    "summary": "Users in Sales get 'Error 500 - internal server error' when saving opportunities in the CRM, starting about an hour ago and affecting multiple people.",
+    "category": "Software",
+    "priority": "P2",
+    "priority_reason": "High urgency/impact: a core CRM function (saving opportunities) is broken with no workaround, affecting multiple Sales users and blocking deal logging, but it is not a full org-wide outage or security event.",
+    "assignment_group": "Application Support",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Exactly how many users are affected, and is it everyone in Sales or a specific subset?",
+      "Which CRM platform/application and environment is this (e.g., Salesforce, Dynamics, internal CRM)?",
+      "Does the error occur on every save attempt or only for certain opportunities/records?",
+      "Is there any additional error text, reference ID, or timestamp shown on the error screen?"
+    ],
+    "suggested_reply": "Hi Jon, thanks for flagging this. I understand you and other Sales colleagues are hitting an 'Error 500' when saving opportunities, which started about an hour ago and is blocking you from logging deals. I've raised this as a high-priority (P2) issue and routed it to our Application Support team to investigate the CRM save failure right away. To speed things up, could you confirm which CRM you're using and roughly how many people are affected? I'll keep you posted on progress.",
+    "tags": [
+      "crm",
+      "error-500",
+      "save-failure",
+      "sales",
+      "application"
+    ],
+    "sla_response": "1 hour (high)",
+    "ticket_id": "T004",
+    "subject": "CRM throwing error on save"
+  },
+  {
+    "summary": "Alicia M. is locked out of her account after too many failed login attempts and cannot access email or Teams before a client call in 20 minutes.",
+    "category": "Account & Access",
+    "priority": "P2",
+    "priority_reason": "High urgency (time-sensitive client call in 20 minutes) and a major function fully broken for the user with no workaround, though impact is limited to a single user.",
+    "assignment_group": "Identity & Access",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "What is your corporate username or the email address associated with the locked account?",
+      "Are you able to receive a phone call or text for identity verification right now?",
+      "Do you see a specific lockout message or error code on the login screen?"
+    ],
+    "suggested_reply": "Hi Alicia, I understand you're locked out and have a client call shortly \u2014 let's get you back in fast. Account lockouts from failed logins usually clear automatically after about 15 minutes, but we can unlock it sooner once we verify your identity. Please reply with your username and confirm a phone number where we can reach you right now, and I'll reset and unlock the account immediately. We're treating this as high priority.",
+    "tags": [
+      "account-lockout",
+      "password",
+      "login",
+      "urgent",
+      "access"
+    ],
+    "sla_response": "1 hour (high)",
+    "ticket_id": "T006",
+    "subject": "Forgot password locked out"
+  },
+  {
+    "summary": "The large multifunction printer near the 3rd floor kitchen repeatedly jams on tray 2.",
+    "category": "Hardware",
+    "priority": "P3",
+    "priority_reason": "Low urgency, single-device impact: one printer is degraded but a workaround exists (users are printing on the downstairs printer), so medium priority with a 4 business-hour target.",
+    "assignment_group": "Desktop Support",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "What is the printer's make/model or asset tag, and the exact floor/room location?",
+      "Does tray 2 contain a specific paper size or type, and does printing from other trays work?",
+      "Is there an error code or message shown on the printer display?"
+    ],
+    "suggested_reply": "Hi Tom, thanks for flagging the 3rd floor printer jamming on tray 2 \u2014 glad the downstairs unit is covering in the meantime. We'll have Desktop Support take a look. To speed things up, could you share the printer's model or asset tag, any error code on its display, and whether other trays print fine? We'll get someone over to clear and inspect tray 2. Thanks for your patience.",
+    "tags": [
+      "printer",
+      "hardware",
+      "paper-jam",
+      "3rd-floor",
+      "tray2"
+    ],
+    "sla_response": "4 business hours (medium)",
+    "ticket_id": "T008",
+    "subject": "Printer on 3rd floor jammed"
+  },
+  {
+    "summary": "Remote user Rachel D. reports her VPN connection drops every 10-15 minutes, forcing repeated reconnections and hurting productivity, while her general internet appears stable.",
+    "category": "Network",
+    "priority": "P3",
+    "priority_reason": "Medium urgency/impact: a single user is degraded and inconvenienced, but a workaround exists (reconnecting) and no team-wide outage is indicated.",
+    "assignment_group": "Network Operations",
+    "sentiment": "Frustrated",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "Which VPN client and version are you using (e.g., Cisco AnyConnect, GlobalProtect, Microsoft Always On)?",
+      "Does any specific error message appear when the VPN drops?",
+      "When did this start, and had anything changed (new router, ISP work, software update)?",
+      "Are you on Wi-Fi or a wired connection, and what is your approximate internet speed?",
+      "Does the drop coincide with any activity (video calls, large transfers) or happen at random?"
+    ],
+    "suggested_reply": "Hi Rachel, thanks for flagging this \u2014 I'm sorry the VPN drops are disrupting your day. This usually points to either the VPN client/session timeout or the home network connection. To pinpoint it quickly, could you tell me which VPN client you're using, whether any error appears when it disconnects, and whether you're on Wi-Fi or wired? In the meantime, try connecting via an ethernet cable if possible, as that often stabilizes the tunnel. I've logged this with Network Operations and we'll follow up shortly.",
+    "tags": [
+      "vpn",
+      "disconnect",
+      "remote-work",
+      "network",
+      "connectivity"
+    ],
+    "sla_response": "4 business hours (medium)",
+    "ticket_id": "T009",
+    "subject": "VPN keeps disconnecting"
+  },
+  {
+    "summary": "User's laptop has gradually become slow over the past two weeks, with multi-minute boot times and lagging applications, though it remains functional.",
+    "category": "Hardware",
+    "priority": "P4",
+    "priority_reason": "Low urgency (requester says 'no rush,' device still works with a workaround of tolerating the lag) and low impact (single user, degraded performance only, no outage).",
+    "assignment_group": "Desktop Support",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "What is the make/model and asset tag of the laptop, and which OS version is it running?",
+      "Roughly how much free disk space is available, and how full is it?",
+      "Did anything change around the time it started \u2014 new software installed, an update, or more browser tabs/apps running?",
+      "Does the slowness happen all the time or mainly with specific applications?"
+    ],
+    "suggested_reply": "Hi Priya, thanks for reporting this \u2014 a laptop that drags on boot and lags in apps is frustrating even when it still works. This is usually fixable with a tune-up (checking disk space, startup programs, pending updates, and background processes). I've logged this with Desktop Support. To help us pinpoint it, could you share your laptop's make/model and asset tag, how much free disk space you have, and whether anything changed a couple of weeks ago? We'll follow up to schedule a quick check.",
+    "tags": [
+      "laptop",
+      "performance",
+      "slow-boot",
+      "desktop-support",
+      "hardware"
+    ],
+    "sla_response": "1 business day (low)",
+    "ticket_id": "T003",
+    "subject": "Laptop very slow"
+  },
+  {
+    "summary": "User requests a second monitor for their desk to make working with spreadsheets easier.",
+    "category": "Hardware",
+    "priority": "P4",
+    "priority_reason": "Low urgency and low impact: a hardware equipment request for a single user with no time constraint ('whenever is fine') and no broken functionality.",
+    "assignment_group": "Desktop Support",
+    "sentiment": "Neutral",
+    "needs_more_info": true,
+    "clarifying_questions": [
+      "What is your desk location, building, and floor for delivery/setup?",
+      "Do you have a preferred monitor size or any accessibility requirements?",
+      "Can you confirm manager approval if required for new hardware purchases?"
+    ],
+    "suggested_reply": "Hi, thanks for reaching out! I've logged your request for a second monitor to help with your spreadsheet work. This is a standard low-priority equipment request, so there's no rush on our end given your flexible timing. To move it along, could you confirm your desk location and whether you have a preferred monitor size? If manager approval is needed for new hardware, we'll let you know. We'll follow up once it's scheduled.",
+    "tags": [
+      "monitor",
+      "hardware-request",
+      "peripheral",
+      "desktop"
+    ],
+    "sla_response": "1 business day (low)",
+    "ticket_id": "T005",
+    "subject": "Request new monitor"
+  }
+]
